@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<servers>
+	<server id="logger1">
+		<zookeeper>127.0.0.1:2128</zookeeper>
+		<groupID>testgroup</groupID>
+		<topic>test</topic>
+		<nThreads>1</nThreads>
+	</server>
+	<server id="logger2"> 
+		<zookeeper>127.0.0.1:2128</zookeeper>>
+		<groupID>testgroup</groupID>
+		<topic>test</topic>
+		<nThreads>1</nThreads>
+	</server>
+	<server id="logger3"> 
+		<zookeeper>127.0.0.1:2128</zookeeper>>
+		<groupID>testgroup</groupID>
+		<topic>test</topic>
+		<nThreads>1</nThreads>
+	</server>
+</servers>
