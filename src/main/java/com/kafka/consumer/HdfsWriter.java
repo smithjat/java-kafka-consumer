@@ -45,10 +45,9 @@ public class HdfsWriter extends Configured{
 		Configuration conf = new Configuration();
 		try {
 			writeFS = writePath.getFileSystem(conf);
-			Path lastPath = new Path(type);
 
-			if (!writeFS.exists(lastPath) && !writeFS.isDirectory(lastPath)) {
-				writeFS.mkdirs(lastPath);
+			if (!writeFS.exists(writePath) && !writeFS.isDirectory(writePath)) {
+				writeFS.mkdirs(writePath);
 			}
 
 			lastCreateFile = null;
