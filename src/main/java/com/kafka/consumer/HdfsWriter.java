@@ -15,8 +15,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 
-
-public class HdfsWriter extends Configured{
+public class HdfsWriter extends Configured {
 
 	public static final String FS_PARAM_NAME = "fs.defaultFS";
 
@@ -28,9 +27,10 @@ public class HdfsWriter extends Configured{
 	private final String tag;
 	private final int threadNum;
 
+	private final Object lockObject = new Object();
 	private FileSystem writeFS;
 
-	public HdfsWriter(String dir, String type, long interval, String tag, int threadNum){
+	public HdfsWriter(String dir, String type, long interval, String tag, int threadNum) {
 		this.interval = interval;
 		this.tag = tag;
 		this.threadNum = threadNum;
@@ -41,7 +41,7 @@ public class HdfsWriter extends Configured{
 		 */
 
 		writePath = new Path(dir + "/" + type);
-		//Configuration conf = getConf();
+		// Configuration conf = getConf();
 		Configuration conf = new Configuration();
 		try {
 			writeFS = writePath.getFileSystem(conf);
@@ -87,7 +87,7 @@ public class HdfsWriter extends Configured{
 				if (!writeFS.exists(newFile)) {
 
 					writeFS.createNewFile(newFile);
-					synchronized (lastCreateFile) {
+					synchronized (lockObject) {
 						// close last file out stream first
 						if (fos != null) {
 							try {
@@ -98,7 +98,8 @@ public class HdfsWriter extends Configured{
 							}
 						}
 
-						// change filename "1454383668315.tmp" to "1454383668315"
+						// change filename "1454383668315.tmp" to
+						// "1454383668315"
 						String finalName = lastCreateFile.getName().split("\\.")[0];
 						Path finalFile = new Path(writePath, finalName);
 
@@ -117,31 +118,31 @@ public class HdfsWriter extends Configured{
 
 
 	public void clean() {
-		if (fos != null) {
+		synchronized (lockObject) {
 			try {
-				fos.close();
-
+				if (fos != null) {
+					fos.close();
+				}
 				// change filename "1454383668315.tmp" to "1454383668315"
 				String finalName = lastCreateFile.getName().split("\\.")[0];
 				Path finalFile = new Path(writePath, finalName);
 				writeFS.rename(lastCreateFile, finalFile);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (IOException e1) {
+				e1.printStackTrace();
 			}
 		}
 	}
 
 	public void writePeriod(String content) {
-		synchronized (lastCreateFile) {
+		synchronized (lockObject) {
 			try {
 				fos.write(content.getBytes());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
+				System.out.println("write to file failed!");
 				e.printStackTrace();
 			}
 		}
-
 	}
 
 	public static void main(String[] args) throws Exception {

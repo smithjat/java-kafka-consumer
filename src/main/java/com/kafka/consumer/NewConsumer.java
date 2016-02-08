@@ -38,7 +38,6 @@ public class NewConsumer extends Thread{
     private final String outPath;
     private Set<String> whiteList;
     public static volatile boolean isLive = true;
-    private Set<Runnable> nthreads;
     
     
     public NewConsumer(String a_zookeeper, String a_groupId, String a_topic,Integer a_threads,String a_tag,Set<String> a_whiteList,String a_outPath) {
@@ -49,7 +48,6 @@ public class NewConsumer extends Thread{
         this.tag = a_tag;
         this.whiteList = a_whiteList;
         outPath = a_outPath;
-        nthreads = new HashSet<Runnable>();
         System.out.println(tag + " creat connector success!");
     }
     
@@ -85,18 +83,20 @@ public class NewConsumer extends Thread{
         System.out.println(tag + " create excutor success!");
         // now create an object to consume the messages
         //
+       
         int threadNumber = 0;
         
         for (final KafkaStream<byte[], byte[]> stream : streams) {
            try{
         	   Runnable thread = new ConsumerTask(stream, threadNumber, tag, whiteList, outPath);
         	   executor.submit(thread);
-        	   nthreads.add(thread);
         	   System.out.println(tag + " executor submit task success!");
         	   threadNumber++;
            }catch(RuntimeException e){
         	   System.out.println("submit task exception!");
+        	   shutdown();
         	   e.printStackTrace();
+        	   return;
            }
         }   
         while(isLive){
@@ -107,9 +107,7 @@ public class NewConsumer extends Thread{
 				e.printStackTrace();
 			}
         }
-        for(Runnable thread : nthreads){
-        	((ConsumerTask)thread).clean();
-        }
+        shutdown();       
     }
  
     private static ConsumerConfig createConsumerConfig(String a_zookeeper, String a_groupId) {
@@ -219,12 +217,6 @@ public class NewConsumer extends Thread{
 			}
         	for (Thread thread : running){
         		if(thread.isAlive() == false){ 
-        			try {
-        	            sleep(5000);
-        	        } catch (InterruptedException ie) {
-        	        	ie.printStackTrace();   	 
-        	        }
-        			((NewConsumer)thread).shutdown();
         			die.add(thread);
         		}
         	}
@@ -239,8 +231,7 @@ public class NewConsumer extends Thread{
         		running.add(newThread);
         	}
         	die.clear();  	
-        }
-    	
+        }    	
         //example.shutdown();
     }
     

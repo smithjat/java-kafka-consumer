@@ -5,6 +5,10 @@ import java.io.UnsupportedEncodingException;
 
 public class Decode{
 	
+	//message format : type=xxx&content=xxx or content=xxx&type=xxx
+    //                 xxx has been url encode 
+    //                 in type=xxx, after decode would be like "NDPushable@fm.qingting.book.qtradio" or "NDPushable" ,we only need "NDPushable"
+    //                 content after decode ,then result has '\n' in the string end
     public static String[] transform(String message) {
     	try{
 	    	String[] slice = message.split("&");
